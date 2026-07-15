@@ -154,11 +154,11 @@ export const products: Product[] = [
   },
   {
     slug: "cherry-beaded-choker",
-    name: { sq: "Çoker me Qershi", en: "Cherry Beaded Choker" },
+    name: { sq: "Gjerdan me Qershi", en: "Cherry Beaded Necklace" },
     tagline: { sq: "Perla qelqi · qershi e emaluar", en: "Seed pearls · enamel cherries" },
     description: {
-      sq: "Një çoker veror me perla të vogla të bardha dhe një hijeshi qershie të kuqe. I ëmbël, lozonjar dhe pikërisht aq i guximshëm.",
-      en: "A summer choker of tiny white seed pearls finished with a red enamel cherry charm. Sweet, playful, and just bold enough.",
+      sq: "Një gjerdan veror me perla të vogla të bardha dhe një hijeshi qershie të kuqe. I ëmbël, lozonjar dhe pikërisht aq i guximshëm.",
+      en: "A summer necklace of tiny white seed pearls finished with a red enamel cherry charm. Sweet, playful, and just bold enough.",
     },
     care: {
       sq: "Shmang kontaktin me kremra dhe parfume.",
