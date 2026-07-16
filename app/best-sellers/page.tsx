@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { ProductListing } from "@/components/collection/ProductListing";
-import { bestSellers } from "@/lib/products";
+import { getBestSellers } from "@/lib/queries";
+import { toLegacyProduct } from "@/lib/product-mapper";
 import { JsonLd, breadcrumbSchema } from "@/lib/schema";
 
 export const metadata: Metadata = {
@@ -9,7 +10,12 @@ export const metadata: Metadata = {
   alternates: { canonical: "/best-sellers" },
 };
 
-export default function BestSellersPage() {
+// Rebuilt on demand; revalidated instantly when the client saves a product.
+export const revalidate = 3600;
+
+export default async function BestSellersPage() {
+  const products = (await getBestSellers()).map(toLegacyProduct);
+
   return (
     <>
       <JsonLd
@@ -25,7 +31,7 @@ export default function BestSellersPage() {
           sq: "Pjesët që klientet tona i kthehen gjithmonë. Zbuloji këtu dhe porosit me një DM.",
           en: "The pieces our customers keep reaching for. Discover them here and order in a DM.",
         }}
-        products={bestSellers()}
+        products={products}
       />
     </>
   );

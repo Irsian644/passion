@@ -291,8 +291,20 @@ export const products: Product[] = [
   },
 ];
 
+/**
+ * Resolves a bilingual value for display.
+ *
+ * Falls back to the other language when the requested one is blank. Products
+ * are now typed by hand in the dashboard and either language may be left
+ * empty — without this, an English visitor would see an empty string rather
+ * than the Albanian the client actually wrote.
+ */
 export function localize(value: Localized, lang: Lang): string {
-  return value[lang] ?? value.en;
+  const wanted = value[lang]?.trim();
+  if (wanted) return wanted;
+
+  const other = lang === "sq" ? value.en : value.sq;
+  return other?.trim() ?? "";
 }
 
 /** The four hero collections shown on the homepage & mega-menu imagery. */

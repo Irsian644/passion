@@ -2,15 +2,22 @@
 
 import Link from "next/link";
 import { useLang } from "@/components/providers/LanguageProvider";
-import { getCollection, productsInCollection, type CollectionSlug } from "@/lib/products";
+import { getCollection, type CollectionSlug, type Product } from "@/lib/products";
 import { ProductCard } from "@/components/product/ProductCard";
 import { InstagramBand } from "@/components/ui/InstagramBand";
 import { Reveal } from "@/components/ui/Reveal";
 
-export function CollectionView({ slug }: { slug: CollectionSlug }) {
+/** Products are fetched on the server and passed in — this stays a client
+ *  component only for the language toggle. */
+export function CollectionView({
+  slug,
+  items,
+}: {
+  slug: CollectionSlug;
+  items: Product[];
+}) {
   const { t, lx } = useLang();
   const collection = getCollection(slug);
-  const items = productsInCollection(slug);
   if (!collection) return null;
 
   return (

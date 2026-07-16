@@ -3,13 +3,14 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { useLang } from "@/components/providers/LanguageProvider";
-import { bestSellers } from "@/lib/products";
+import type { Product } from "@/lib/products";
 import { ProductCard } from "@/components/product/ProductCard";
 import { Reveal } from "@/components/ui/Reveal";
 
-export function BestSellers() {
+/** Items come from the server (database); this stays a client component
+ *  only for the language toggle. */
+export function BestSellers({ items }: { items: Product[] }) {
   const { t } = useLang();
-  const items = bestSellers().slice(0, 4);
 
   return (
     <section className="bg-ivory py-28 md:py-40">

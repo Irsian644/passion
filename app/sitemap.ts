@@ -1,9 +1,14 @@
 import type { MetadataRoute } from "next";
 import { SITE } from "@/lib/site";
-import { collections, products } from "@/lib/products";
+import { collections } from "@/lib/products";
+import { getPublishedProducts } from "@/lib/queries";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export const revalidate = 3600;
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
+  // Only published products — never advertise a hidden or deleted URL.
+  const products = await getPublishedProducts();
   const staticRoutes = ["", "/new", "/best-sellers", "/about", "/contact", "/shipping", "/faq", "/privacy", "/terms"].map((path) => ({
     url: `${SITE.domain}${path}`,
     lastModified: now,

@@ -7,14 +7,20 @@ import { Marquee } from "@/components/sections/Marquee";
 import { InstagramGallery } from "@/components/sections/InstagramGallery";
 import { Newsletter } from "@/components/sections/Newsletter";
 import { JsonLd, organizationSchema, websiteSchema } from "@/lib/schema";
+import { getBestSellers } from "@/lib/queries";
+import { toLegacyProduct } from "@/lib/product-mapper";
 
-export default function HomePage() {
+export const revalidate = 3600;
+
+export default async function HomePage() {
+  const bestSellers = (await getBestSellers()).slice(0, 4).map(toLegacyProduct);
+
   return (
     <>
       <JsonLd data={[organizationSchema(), websiteSchema()]} />
       <Hero />
       <Collections />
-      <BestSellers />
+      <BestSellers items={bestSellers} />
       <BrandStory />
       <Marquee />
       <Trust />

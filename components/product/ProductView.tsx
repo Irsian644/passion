@@ -6,7 +6,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, Gift, Truck, ShieldCheck, Instagram } from "lucide-react";
 import type { Product } from "@/lib/products";
-import { getCollection, relatedProducts } from "@/lib/products";
+import { getCollection } from "@/lib/products";
 import { useLang } from "@/components/providers/LanguageProvider";
 import { ProductCard } from "@/components/product/ProductCard";
 import { InstagramCTA } from "@/components/ui/InstagramCTA";
@@ -45,11 +45,17 @@ function Accordion({ title, children, open = false }: { title: string; children:
   );
 }
 
-export function ProductView({ product }: { product: Product }) {
+/** `related` is resolved on the server and passed in. */
+export function ProductView({
+  product,
+  related = [],
+}: {
+  product: Product;
+  related?: Product[];
+}) {
   const { t, lx } = useLang();
   const name = lx(product.name);
   const collection = getCollection(product.primaryCollection);
-  const related = relatedProducts(product);
   const isSkincareOrBeauty = product.primaryCollection === "skincare" || product.primaryCollection === "beauty";
 
   return (

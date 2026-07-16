@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { CollectionView } from "@/components/collection/CollectionView";
 import { collections, getCollection, type CollectionSlug } from "@/lib/products";
+import { getProductsByCollection } from "@/lib/queries";
+import { toLegacyProduct } from "@/lib/product-mapper";
 import { JsonLd, breadcrumbSchema } from "@/lib/schema";
 
 export function generateStaticParams() {
@@ -28,10 +30,14 @@ export async function generateMetadata({
   };
 }
 
+export const revalidate = 3600;
+
 export default async function CollectionPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const collection = getCollection(slug);
   if (!collection) notFound();
+
+  const items = (await getProductsByCollection(slug as CollectionSlug)).map(toLegacyProduct);
 
   return (
     <>
@@ -41,7 +47,7 @@ export default async function CollectionPage({ params }: { params: Promise<{ slu
           { name: collection.name.en, url: `/collections/${slug}` },
         ])}
       />
-      <CollectionView slug={slug as CollectionSlug} />
+      <CollectionView slug={slug as CollectionSlug} items={items} />
     </>
   );
 }
