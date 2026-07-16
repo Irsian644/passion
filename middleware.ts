@@ -12,9 +12,24 @@ function securityHeaders(response: NextResponse, nonce: string): NextResponse {
   // Next.js requires 'unsafe-inline' for its inline bootstrap in production;
   // 'strict-dynamic' with a nonce lets our own scripts run while blocking
   // arbitrary injected ones.
+  //
+  // 'unsafe-eval' is DEV ONLY: webpack's HMR runtime evaluates strings, and
+  // without it React never hydrates — which silently leaves Framer Motion's
+  // reveal animations stuck at opacity:0, i.e. an invisible product grid.
+  // Production ships without it.
+  const isDev = process.env.NODE_ENV === "development";
+  const scriptSrc = [
+    `'self'`,
+    `'nonce-${nonce}'`,
+    `'strict-dynamic'`,
+    `https:`,
+    `'unsafe-inline'`,
+    ...(isDev ? ["'unsafe-eval'"] : []),
+  ].join(" ");
+
   const csp = [
     `default-src 'self'`,
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' https: 'unsafe-inline'`,
+    `script-src ${scriptSrc}`,
     `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com`,
     `font-src 'self' https://fonts.gstatic.com data:`,
     `img-src 'self' data: blob: ${supabaseHost}`,
