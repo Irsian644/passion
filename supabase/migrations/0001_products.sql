@@ -9,8 +9,10 @@ create extension if not exists "pgcrypto";
 create table if not exists public.products (
   id                 uuid primary key default gen_random_uuid(),
 
-  -- Albanian is authored by the client; English is machine-translated then editable.
-  name_sq            text not null check (length(trim(name_sq)) between 1 and 120),
+  -- Both languages are typed by hand. Either may be blank: whichever is filled
+  -- is shown, and the other falls back to it (see lib/localize.ts).
+  -- The CHECK at the end of the table requires at least one name.
+  name_sq            text not null default '' check (length(name_sq) <= 120),
   name_en            text not null default '' check (length(name_en) <= 120),
   tagline_sq         text not null default '' check (length(tagline_sq) <= 160),
   tagline_en         text not null default '' check (length(tagline_en) <= 160),
@@ -38,7 +40,11 @@ create table if not exists public.products (
                        check (slug ~ '^[a-z0-9]+(-[a-z0-9]+)*$'),
 
   created_at         timestamptz not null default now(),
-  updated_at         timestamptz not null default now()
+  updated_at         timestamptz not null default now(),
+
+  -- A product must be nameable in at least one language.
+  constraint products_has_a_name
+    check (length(trim(name_sq)) > 0 or length(trim(name_en)) > 0)
 );
 
 create index if not exists products_published_order_idx
