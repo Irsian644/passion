@@ -92,6 +92,15 @@ export function Footer() {
             <Link href="/terms" className="hover:text-cream">
               {t.footer.links.terms}
             </Link>
+            {/* The client's only way in. Deliberately quiet, and rel=nofollow
+                so it is never followed into search results. */}
+            <Link
+              href="/studio"
+              rel="nofollow"
+              className="text-cream/35 transition-colors hover:text-cream"
+            >
+              {lang === "sq" ? "Menaxho Produktet" : "Manage Products"}
+            </Link>
             <span className="text-gold-soft">{t.footer.made}</span>
           </p>
         </div>

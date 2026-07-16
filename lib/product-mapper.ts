@@ -17,12 +17,16 @@ export interface DbProduct {
   description: MaybeLocalized;
   care: MaybeLocalized;
   materials: MaybeLocalized;
+  /** Public URLs, ready to render. */
   images: string[];
+  /** Raw storage paths — what the editor saves back to the DB. */
+  imagePaths: string[];
   collections: CollectionSlug[];
   primaryCollection: CollectionSlug | null;
   bestSeller: boolean;
   newArrival: boolean;
   displayOrder: number;
+  published: boolean;
 }
 
 /** Builds a public URL for an image stored in the product-images bucket. */
@@ -45,10 +49,12 @@ export function toDbProduct(row: ProductRow): DbProduct {
     care: { sq: row.care_sq, en: row.care_en },
     materials: { sq: row.materials_sq, en: row.materials_en },
     images: row.images.map(imageUrl).filter(Boolean),
+    imagePaths: row.images,
     collections: row.collections as CollectionSlug[],
     primaryCollection: (row.primary_collection as CollectionSlug) ?? null,
     bestSeller: row.best_seller,
     newArrival: row.new_arrival,
     displayOrder: row.display_order,
+    published: row.published,
   };
 }
