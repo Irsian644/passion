@@ -32,11 +32,14 @@ export const ONBOARDING_FLAG = "onboarding_complete";
  *     who was invited before this flag existed.
  */
 export function needsOnboarding(user: User): boolean {
+  // The flag is the authoritative "done" signal, set when setup completes.
   if (user.user_metadata?.[ONBOARDING_FLAG] === true) return false;
 
-  // Invited users carry invited_at. If they never completed our setup page,
-  // they still owe us a password.
-  const wasInvited = Boolean(user.user_metadata?.invited_at ?? user.invited_at);
+  // Invited users carry invited_at. Supabase exposes it top-level on the full
+  // user record (getUser / admin API); we also check user_metadata because the
+  // implicit-flow JWT carries only that. Either presence means the account was
+  // created by invitation and has never chosen a password.
+  const wasInvited = Boolean(user.invited_at ?? user.user_metadata?.invited_at);
   if (wasInvited) return true;
 
   // Anyone created by other means (e.g. the first admin, made in the Supabase

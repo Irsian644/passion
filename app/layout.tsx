@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Cormorant_Garamond, Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { LanguageProvider } from "@/components/providers/LanguageProvider";
+import { AuthFragmentHandler } from "@/components/studio/AuthFragmentHandler";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { SITE } from "@/lib/site";
@@ -77,6 +78,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="sq" className={`${cormorant.variable} ${playfair.variable} ${inter.variable}`}>
       <body className="font-sans antialiased">
+        {/* Redeems a Supabase auth fragment (#access_token=…) if the email
+            template dropped the client here instead of /auth/confirm. */}
+        <AuthFragmentHandler />
         <LanguageProvider>
           <a
             href="#main"
