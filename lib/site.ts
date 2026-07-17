@@ -1,6 +1,17 @@
+/**
+ * The canonical origin, used for every absolute URL (canonicals, OG tags,
+ * sitemap, JSON-LD). Driven by NEXT_PUBLIC_SITE_URL so it always matches where
+ * the site is actually served — set it in Vercel to the production domain.
+ * Falls back to the brand domain, then localhost for dev.
+ */
+const ORIGIN = (
+  process.env.NEXT_PUBLIC_SITE_URL ||
+  "https://passiondream.al"
+).replace(/\/$/, "");
+
 export const SITE = {
   name: "Passion Dream",
-  domain: "https://passiondream.al",
+  domain: ORIGIN,
   handle: "@passion_dream17",
   username: "passion_dream17",
   instagram: "https://instagram.com/passion_dream17",
