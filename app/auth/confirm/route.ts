@@ -66,9 +66,14 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL(SETUP_PATH, origin));
   }
 
-  // `next` is attacker-controllable, so only ever honour a local path.
-  const destination =
-    next && next.startsWith("/") && !next.startsWith("//") ? next : DASHBOARD_PATH;
+  // `next` is attacker-controllable, so only ever honour a same-origin path.
+  // Must start with a single "/" and not "//" or "/\" (both can be treated as
+  // protocol-relative and redirect off-site).
+  const isLocalPath =
+    typeof next === "string" &&
+    /^\/(?![/\\])/.test(next);
 
-  return NextResponse.redirect(new URL(destination, origin));
+  return NextResponse.redirect(
+    new URL(isLocalPath ? next : DASHBOARD_PATH, origin),
+  );
 }

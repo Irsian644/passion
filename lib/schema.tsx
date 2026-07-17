@@ -51,13 +51,28 @@ export function breadcrumbSchema(items: { name: string; url: string }[]) {
   };
 }
 
+/**
+ * Serializes JSON-LD for a <script> element.
+ *
+ * JSON.stringify does NOT escape `<`, `>` or `&`, so an admin-authored product
+ * name like `</script><script>…` would break out of the JSON-LD block and
+ * execute — a stored XSS. Escaping those three characters makes it impossible
+ * for any string value to terminate the script context.
+ */
+function safeJsonLd(value: unknown): string {
+  return JSON.stringify(value)
+    .replace(/</g, "\\u003c")
+    .replace(/>/g, "\\u003e")
+    .replace(/&/g, "\\u0026");
+}
+
 export function JsonLd({ data }: { data: object | object[] }) {
   const arr = Array.isArray(data) ? data : [data];
   return (
     <script
       type="application/ld+json"
       // eslint-disable-next-line react/no-danger
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(arr) }}
+      dangerouslySetInnerHTML={{ __html: safeJsonLd(arr) }}
     />
   );
 }
