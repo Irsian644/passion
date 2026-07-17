@@ -249,14 +249,14 @@ export function ProductForm({ product }: { product?: DbProduct }) {
         <div className="mt-5 space-y-3 border-t border-[#f5f5f4] pt-5">
           <Toggle
             name="bestSeller"
-            label="E preferuar"
-            hint="Shfaqet te “Më të Preferuarat”"
+            label="Më e shitur"
+            hint="Shfaqet te faqja “Më të Shiturat”"
             defaultChecked={product?.bestSeller}
           />
           <Toggle
             name="newArrival"
             label="E re"
-            hint="Shfaqet te “Të Rejat”"
+            hint="Shfaqet te faqja “Të Reja”"
             defaultChecked={product?.newArrival}
           />
         </div>

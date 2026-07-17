@@ -121,7 +121,7 @@ export function ProductList({ products }: { products: DbProduct[] }) {
               </p>
               <p className="mt-0.5 text-[12px] text-[#a8a29e]">
                 {product.published ? "Në faqe" : "E fshehur"}
-                {product.bestSeller ? " · E preferuar" : ""}
+                {product.bestSeller ? " · Më e shitur" : ""}
                 {product.newArrival ? " · E re" : ""}
               </p>
             </div>
