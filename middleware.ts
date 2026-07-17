@@ -3,6 +3,23 @@ import { NextResponse, type NextRequest } from "next/server";
 
 const DASHBOARD_PREFIX = "/studio";
 const LOGIN_PATH = "/studio/login";
+const SETUP_PATH = "/setup-account";
+
+/**
+ * Mirror of needsOnboarding() in lib/onboarding.ts.
+ *
+ * Duplicated deliberately: this file runs on the Edge runtime and cannot
+ * import a `server-only` module. Keep the two in step — lib/onboarding.ts is
+ * the authoritative copy, and the server-side requireAdmin() check is what
+ * actually enforces the gate.
+ */
+function awaitingPassword(user: {
+  invited_at?: string;
+  user_metadata?: Record<string, unknown>;
+}): boolean {
+  if (user.user_metadata?.onboarding_complete === true) return false;
+  return Boolean(user.user_metadata?.invited_at ?? user.invited_at);
+}
 /** Reachable without a session (login, and the password-reset round trip). */
 const PUBLIC_STUDIO_PATHS = [LOGIN_PATH, "/studio/forgot-password", "/studio/reset-password"];
 
@@ -109,9 +126,26 @@ export async function middleware(request: NextRequest) {
     return securityHeaders(NextResponse.redirect(url), nonce);
   }
 
+  // An invited user is authenticated *before* they have a password, so a
+  // session is not permission to enter. Anyone mid-onboarding is pinned to the
+  // setup page — including from the login page, which would otherwise wave
+  // them straight through to the dashboard.
+  //
+  // This mirrors requireAdmin(); the server-side check is the real boundary,
+  // this one just avoids a pointless round-trip.
+  if (user && awaitingPassword(user)) {
+    if (isStudio || pathname === LOGIN_PATH) {
+      const url = request.nextUrl.clone();
+      url.pathname = SETUP_PATH;
+      url.search = "";
+      return securityHeaders(NextResponse.redirect(url), nonce);
+    }
+    return securityHeaders(response, nonce);
+  }
+
   // Already signed in and hitting the login page -> straight to the dashboard.
   // This is what makes the footer link open the dashboard without re-asking.
-  if (user && pathname === LOGIN_PATH) {
+  if (user && (pathname === LOGIN_PATH || pathname === SETUP_PATH)) {
     const url = request.nextUrl.clone();
     url.pathname = DASHBOARD_PREFIX;
     url.search = "";

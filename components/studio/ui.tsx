@@ -85,16 +85,24 @@ export function SubmitButton({
   pendingLabel,
   variant = "primary",
   className = "",
+  disabled = false,
 }: {
   children: React.ReactNode;
   pendingLabel?: string;
   variant?: "primary" | "secondary" | "danger";
   className?: string;
+  /** Caller-driven disable (e.g. invalid form); ORed with the pending state. */
+  disabled?: boolean;
 }) {
   const { pending } = useFormStatus();
 
   return (
-    <Button type="submit" variant={variant} disabled={pending} className={className}>
+    <Button
+      type="submit"
+      variant={variant}
+      disabled={pending || disabled}
+      className={className}
+    >
       {pending ? (
         <>
           <Loader2 size={15} className="animate-spin" aria-hidden />
