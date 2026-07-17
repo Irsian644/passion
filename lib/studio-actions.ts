@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { DASHBOARD_PATH, LOGIN_PATH, requireAdmin } from "@/lib/auth";
@@ -25,6 +26,25 @@ export interface ActionResult {
   ok: boolean;
   message?: string;
   fieldErrors?: Record<string, string>;
+}
+
+/**
+ * The origin of the current request, from the proxy-aware forwarded headers
+ * Vercel sets, falling back to Host, then to the configured site URL, then
+ * localhost. Used so auth emails link back to the environment the user is
+ * actually on.
+ */
+async function requestOrigin(): Promise<string> {
+  const h = await headers();
+  const host = h.get("x-forwarded-host") ?? h.get("host");
+  if (host) {
+    const proto = h.get("x-forwarded-proto") ?? "https";
+    return `${proto}://${host}`;
+  }
+  return (
+    process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ??
+    "http://localhost:3000"
+  );
 }
 
 /** Public pages that show product data. Revalidated after every mutation. */
@@ -119,11 +139,17 @@ export async function requestPasswordReset(
   if (!(await checkLoginRateLimit(email.data))) return DONE;
 
   const supabase = await createSupabaseServerClient();
-  const origin =
-    process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ?? "http://localhost:3000";
+
+  // Send the reset link back to wherever the request actually came from, so a
+  // reset started on localhost returns to localhost and one started on the
+  // live site returns there — rather than always using the configured
+  // production origin. Falls back to NEXT_PUBLIC_SITE_URL, then localhost.
+  const origin = await requestOrigin();
 
   await supabase.auth.resetPasswordForEmail(email.data, {
-    redirectTo: `${origin}/studio/reset-password`,
+    // Route through /auth/confirm, which exchanges the token and forwards to
+    // the reset page. This is the same PKCE path the invite flow uses.
+    redirectTo: `${origin}/auth/confirm?next=/studio/reset-password`,
   });
 
   return DONE;

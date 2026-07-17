@@ -45,9 +45,16 @@ export function AuthFragmentHandler() {
 
         // Full navigation (not router.push) so the server re-reads the session
         // cookie and applies the onboarding gate.
-        window.location.assign(
-          type === "invite" || type === "signup" ? "/setup-account" : "/studio",
-        );
+        //   invite/signup -> create a password
+        //   recovery       -> choose a new password
+        //   anything else  -> the dashboard
+        const destination =
+          type === "invite" || type === "signup"
+            ? "/setup-account"
+            : type === "recovery"
+              ? "/studio/reset-password"
+              : "/studio";
+        window.location.assign(destination);
       });
   }, []);
 
