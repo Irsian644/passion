@@ -12,7 +12,7 @@ const WINDOW_SECONDS = 15 * 60;
  * Identifies the caller without storing anything personally identifying.
  * The raw IP and email never reach the database — only a salted hash.
  */
-async function bucketFor(email: string): Promise<string> {
+async function bucketFor(email: string, scope: string): Promise<string> {
   const headerList = await headers();
   const ip =
     headerList.get("x-forwarded-for")?.split(",")[0]?.trim() ??
@@ -20,7 +20,7 @@ async function bucketFor(email: string): Promise<string> {
     "unknown";
 
   return createHash("sha256")
-    .update(`${ip}|${email.toLowerCase()}`)
+    .update(`${scope}|${ip}|${email.toLowerCase()}`)
     .digest("hex");
 }
 
@@ -32,10 +32,10 @@ async function bucketFor(email: string): Promise<string> {
  * throttling underneath this, so this is defence in depth rather than the only
  * barrier.
  */
-export async function checkLoginRateLimit(email: string): Promise<boolean> {
+async function checkLimit(email: string, scope: string): Promise<boolean> {
   try {
     const supabase = createSupabaseAdminClient();
-    const bucket = await bucketFor(email);
+    const bucket = await bucketFor(email, scope);
 
     const { data, error } = await supabase.rpc("record_auth_attempt", {
       p_bucket: bucket,
@@ -49,12 +49,26 @@ export async function checkLoginRateLimit(email: string): Promise<boolean> {
   }
 }
 
-/** Resets the counter once credentials are accepted. */
+/** Rate-limits sign-in attempts. */
+export function checkLoginRateLimit(email: string): Promise<boolean> {
+  return checkLimit(email, "login");
+}
+
+/**
+ * Rate-limits password-reset requests, in a SEPARATE bucket from login — a
+ * legitimate reset must not be blocked by prior failed sign-ins, and vice
+ * versa. Supabase applies its own email-send throttle underneath this.
+ */
+export function checkResetRateLimit(email: string): Promise<boolean> {
+  return checkLimit(email, "reset");
+}
+
+/** Resets the login counter once credentials are accepted. */
 export async function clearLoginRateLimit(email: string): Promise<void> {
   try {
     const supabase = createSupabaseAdminClient();
     await supabase.rpc("clear_auth_attempts", {
-      p_bucket: await bucketFor(email),
+      p_bucket: await bucketFor(email, "login"),
     });
   } catch {
     // Non-fatal: the window expires on its own.

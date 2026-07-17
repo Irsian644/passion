@@ -5,7 +5,11 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { DASHBOARD_PATH, LOGIN_PATH, requireAdmin } from "@/lib/auth";
-import { checkLoginRateLimit, clearLoginRateLimit } from "@/lib/rate-limit";
+import {
+  checkLoginRateLimit,
+  checkResetRateLimit,
+  clearLoginRateLimit,
+} from "@/lib/rate-limit";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import {
   emailSchema,
@@ -136,7 +140,7 @@ export async function requestPasswordReset(
   };
 
   if (!email.success) return DONE;
-  if (!(await checkLoginRateLimit(email.data))) return DONE;
+  if (!(await checkResetRateLimit(email.data))) return DONE;
 
   const supabase = await createSupabaseServerClient();
 

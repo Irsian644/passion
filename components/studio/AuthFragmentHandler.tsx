@@ -10,51 +10,68 @@ import { createSupabaseBrowserClient } from "@/lib/supabase/client";
  * Supabase's default email templates use `{{ .ConfirmationURL }}`, which sends
  * the user to the Site URL with the session in a URL *fragment*:
  *
- *   https://example.com/#access_token=...&type=invite
+ *   https://example.com/#access_token=...&type=recovery
  *
  * A fragment is never transmitted to the server, so our /auth/confirm route
- * cannot see it. Only the browser can. This component reads the fragment, lets
- * the SDK persist the session into cookies, then hands control back to the
- * server by navigating — at which point middleware and requireAdmin() can see
- * the user and route them correctly (invited -> /setup-account).
+ * cannot see it. Only the browser can.
  *
- * The PKCE path through /auth/confirm remains the preferred flow; this exists
- * so a default email template still lands the client in the right place.
+ * Race note: @supabase/ssr's browser client has detectSessionInUrl:true and
+ * consumes+clears the fragment as soon as it is created. If we read
+ * window.location.hash inside an effect, Supabase may have already wiped it,
+ * so we would lose the `type` and misroute (e.g. a recovery link silently
+ * lands in the dashboard instead of the reset page). We therefore snapshot the
+ * fragment ONCE at module evaluation — before any Supabase client exists — and
+ * route from that snapshot.
  */
+
+interface FragmentAuth {
+  accessToken: string;
+  refreshToken: string;
+  type: string | null;
+}
+
+/** Snapshot taken at import time, before Supabase can clear the hash. */
+const snapshot: FragmentAuth | null = (() => {
+  if (typeof window === "undefined") return null;
+  const hash = window.location.hash;
+  if (!hash || !hash.includes("access_token")) return null;
+
+  const params = new URLSearchParams(hash.slice(1));
+  const accessToken = params.get("access_token");
+  const refreshToken = params.get("refresh_token");
+  if (!accessToken || !refreshToken) return null;
+
+  return { accessToken, refreshToken, type: params.get("type") };
+})();
+
+function destinationFor(type: string | null): string {
+  if (type === "invite" || type === "signup") return "/setup-account";
+  if (type === "recovery") return "/studio/reset-password";
+  return "/studio";
+}
+
 export function AuthFragmentHandler() {
   useEffect(() => {
-    const hash = window.location.hash;
-    if (!hash || !hash.includes("access_token")) return;
+    if (!snapshot) return;
 
-    const params = new URLSearchParams(hash.slice(1));
-    const accessToken = params.get("access_token");
-    const refreshToken = params.get("refresh_token");
-    if (!accessToken || !refreshToken) return;
-
-    const type = params.get("type");
     const supabase = createSupabaseBrowserClient();
 
+    // Ensure the session cookie is established (Supabase may already have done
+    // this via detectSessionInUrl; setSession is idempotent).
     supabase.auth
-      .setSession({ access_token: accessToken, refresh_token: refreshToken })
-      .then(({ error }) => {
-        // Strip the tokens from the URL either way — they must not linger in
-        // history, be copy-pasted, or leak via a Referer header.
+      .setSession({
+        access_token: snapshot.accessToken,
+        refresh_token: snapshot.refreshToken,
+      })
+      .finally(() => {
+        // Strip the tokens from the URL — they must not linger in history, be
+        // copy-pasted, or leak via a Referer header.
         window.history.replaceState(null, "", window.location.pathname);
 
-        if (error) return;
-
         // Full navigation (not router.push) so the server re-reads the session
-        // cookie and applies the onboarding gate.
-        //   invite/signup -> create a password
-        //   recovery       -> choose a new password
-        //   anything else  -> the dashboard
-        const destination =
-          type === "invite" || type === "signup"
-            ? "/setup-account"
-            : type === "recovery"
-              ? "/studio/reset-password"
-              : "/studio";
-        window.location.assign(destination);
+        // cookie and applies the onboarding gate. Route from the snapshot, so
+        // it is correct even if Supabase already cleared the fragment.
+        window.location.assign(destinationFor(snapshot.type));
       });
   }, []);
 
