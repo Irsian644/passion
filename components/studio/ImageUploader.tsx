@@ -8,8 +8,6 @@ import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { imageUrl } from "@/lib/product-mapper";
 
 const MAX_IMAGES = 8;
-const MAX_BYTES = 8 * 1024 * 1024; // 8 MB
-const MIN_DIMENSION = 400;
 const ACCEPTED = ["image/jpeg", "image/png", "image/webp", "image/avif"];
 
 /**
@@ -23,18 +21,22 @@ const ACCEPTED = ["image/jpeg", "image/png", "image/webp", "image/avif"];
  * The bytes still go browser -> Supabase, never through a Vercel function, so
  * the ~4.5MB serverless request-body cap does not apply.
  *
- * Client-side checks here are for fast feedback only — createSignedUpload
- * re-validates type and size on the server.
+ * There is no size or dimension limit: the client uploads whatever their phone
+ * or camera produced. The only client-side check is that the file decodes as an
+ * image, and createSignedUpload re-validates the type on the server.
  */
 
-/** Reads real pixel dimensions; a lying Content-Type can't fake this. */
-function readDimensions(file: File): Promise<{ width: number; height: number }> {
+/**
+ * Resolves only if the browser can actually decode the file as an image.
+ * A lying Content-Type cannot fake this.
+ */
+function readDimensions(file: File): Promise<void> {
   return new Promise((resolve, reject) => {
     const url = URL.createObjectURL(file);
     const img = new Image();
     img.onload = () => {
       URL.revokeObjectURL(url);
-      resolve({ width: img.naturalWidth, height: img.naturalHeight });
+      resolve();
     };
     img.onerror = () => {
       URL.revokeObjectURL(url);
@@ -75,25 +77,31 @@ export function ImageUploader({
           setError("Vetëm JPG, PNG, WebP ose AVIF.");
           continue;
         }
-        if (file.size > MAX_BYTES) {
-          setError("Fotografia duhet të jetë nën 8 MB.");
-          continue;
-        }
 
+        // No size or dimension limits — the client's own photos are whatever
+        // they are. This only rejects a file that cannot be decoded as an
+        // image at all (corrupt, or renamed to look like one).
         try {
-          const { width, height } = await readDimensions(file);
-          if (width < MIN_DIMENSION || height < MIN_DIMENSION) {
-            setError(`Fotografia duhet të jetë të paktën ${MIN_DIMENSION}px.`);
-            continue;
-          }
+          await readDimensions(file);
         } catch {
           setError("Skedari nuk është fotografi e vlefshme.");
           continue;
         }
 
         // Ask the server to authorise this file and name it.
-        const signed = await createSignedUpload(file.type, file.size);
+        let signed;
+        try {
+          signed = await createSignedUpload(file.type);
+        } catch (cause) {
+          // A thrown action (e.g. an expired session redirect) would otherwise
+          // surface as a bare "failed" with nothing to debug.
+          console.error("[upload] createSignedUpload threw:", cause);
+          setError("Sesioni skadoi. Rifresko faqen dhe provo përsëri.");
+          continue;
+        }
+
         if (!signed.ok || !signed.path || !signed.token) {
+          console.error("[upload] server refused:", signed.message);
           setError(signed.message ?? "Ngarkimi dështoi. Provo përsëri.");
           continue;
         }
@@ -105,7 +113,9 @@ export function ImageUploader({
           });
 
         if (uploadError) {
-          setError("Ngarkimi dështoi. Provo përsëri.");
+          // Surface the real reason in the console; keep the UI message calm.
+          console.error("[upload] storage rejected:", uploadError);
+          setError(`Ngarkimi dështoi: ${uploadError.message}`);
           continue;
         }
         added.push(signed.path);
@@ -223,7 +233,7 @@ export function ImageUploader({
           </label>
 
           <p className="mt-1.5 text-[12px] text-[#a8a29e]">
-            ose tërhiqi këtu · JPG, PNG, WebP · deri 8 MB
+            ose tërhiqi këtu · JPG, PNG, WebP
           </p>
         </div>
       ) : null}
