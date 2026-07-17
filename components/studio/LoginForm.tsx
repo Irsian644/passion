@@ -36,6 +36,16 @@ export function LoginForm() {
         />
       </Field>
 
+      <label className="flex cursor-pointer items-center gap-2.5 text-[14px] text-[#44403c]">
+        <input
+          type="checkbox"
+          name="remember"
+          defaultChecked
+          className="h-[18px] w-[18px] cursor-pointer rounded border-[#d6d3d1] text-[#1c1917] focus:ring-2 focus:ring-[#1c1917]/20"
+        />
+        Më mbaj të kyçur
+      </label>
+
       <SubmitButton pendingLabel="Duke hyrë…" className="w-full">
         Hyr
       </SubmitButton>

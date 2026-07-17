@@ -87,18 +87,30 @@ export async function middleware(request: NextRequest) {
           return request.cookies.getAll();
         },
         setAll(cookiesToSet) {
+          // "Remember me": when the user opted out (pd_remember=0), write the
+          // auth cookies as SESSION cookies (no maxAge/expires) so they clear
+          // when the browser closes. Default (persistent) keeps Supabase's own
+          // lifetime.
+          const sessionOnly = request.cookies.get("pd_remember")?.value === "0";
+
           for (const { name, value } of cookiesToSet) {
             request.cookies.set(name, value);
           }
           response = NextResponse.next({ request: { headers: requestHeaders } });
           for (const { name, value, options } of cookiesToSet) {
-            response.cookies.set(name, value, {
+            const cookieOptions = {
               ...options,
               httpOnly: true,
-              sameSite: "lax",
+              sameSite: "lax" as const,
               secure: process.env.NODE_ENV === "production",
               path: "/",
-            });
+            };
+            if (sessionOnly) {
+              // Remove persistence so it becomes a session cookie.
+              delete cookieOptions.maxAge;
+              delete cookieOptions.expires;
+            }
+            response.cookies.set(name, value, cookieOptions);
           }
         },
       },

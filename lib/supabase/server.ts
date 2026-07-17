@@ -28,14 +28,25 @@ export async function createSupabaseServerClient() {
         },
         setAll(cookiesToSet) {
           try {
+            // "Remember me": when opted out (pd_remember=0), drop maxAge/expires
+            // so the auth cookies become session cookies (cleared on browser
+            // close). The action sets pd_remember before sign-in, so it is
+            // readable here. Default keeps Supabase's own lifetime.
+            const sessionOnly = cookieStore.get("pd_remember")?.value === "0";
+
             for (const { name, value, options } of cookiesToSet) {
-              cookieStore.set(name, value, {
+              const opts = {
                 ...options,
                 httpOnly: true,
-                sameSite: "lax",
+                sameSite: "lax" as const,
                 secure: process.env.NODE_ENV === "production",
                 path: "/",
-              });
+              };
+              if (sessionOnly && name !== "pd_remember") {
+                delete opts.maxAge;
+                delete opts.expires;
+              }
+              cookieStore.set(name, value, opts);
             }
           } catch {
             // Called from a Server Component, where cookies are read-only.

@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { DASHBOARD_PATH, LOGIN_PATH, requireAdmin } from "@/lib/auth";
@@ -72,6 +72,7 @@ export async function signIn(
 ): Promise<ActionResult> {
   const email = emailSchema.safeParse(formData.get("email"));
   const password = String(formData.get("password") ?? "");
+  const remember = formData.get("remember") === "on";
 
   // Deliberately generic: never reveal whether the email exists.
   const GENERIC = "Email ose fjalëkalim i pasaktë.";
@@ -86,6 +87,19 @@ export async function signIn(
       message: "Shumë përpjekje. Provo përsëri pas 15 minutash.",
     };
   }
+
+  // Record the "remember me" preference BEFORE signing in, so that when the
+  // sign-in writes the auth cookies, createSupabaseServerClient can read this
+  // flag and make them session-only when unchecked. When unchecked the auth
+  // cookies clear on browser close; when checked (default) they persist.
+  const cookieStore = await cookies();
+  cookieStore.set("pd_remember", remember ? "1" : "0", {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: 60 * 60 * 24 * 365,
+  });
 
   const supabase = await createSupabaseServerClient();
   const { error } = await supabase.auth.signInWithPassword({
@@ -102,6 +116,7 @@ export async function signIn(
 export async function signOut(): Promise<void> {
   const supabase = await createSupabaseServerClient();
   await supabase.auth.signOut();
+  (await cookies()).delete("pd_remember");
   redirect(LOGIN_PATH);
 }
 
