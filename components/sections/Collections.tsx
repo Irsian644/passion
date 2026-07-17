@@ -38,7 +38,7 @@ export function Collections() {
               key={c.slug}
               initial={{ opacity: 0, y: 26 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-60px" }}
+              viewport={{ once: true, amount: "some" }}
               transition={{ duration: 1, ease: EASE, delay: i * 0.09 }}
               className={offset ? "md:mt-12" : ""}
             >

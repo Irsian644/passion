@@ -18,7 +18,10 @@ export function ProductCard({ product, priority = false }: { product: Product; p
       className="group relative flex flex-col"
       initial={{ opacity: 0, y: 24 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-60px" }}
+      // amount:"some" fires as soon as any part enters; without it a fast or
+      // programmatic scroll can jump the card past a negative-margin band and
+      // leave it stuck at opacity:0 forever (once:true never retries).
+      viewport={{ once: true, amount: "some" }}
       transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
     >
       <div className="relative aspect-[4/5] w-full overflow-hidden rounded-[2px] bg-ivory">

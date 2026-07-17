@@ -23,23 +23,22 @@ function awaitingPassword(user: {
 /** Reachable without a session (login, and the password-reset round trip). */
 const PUBLIC_STUDIO_PATHS = [LOGIN_PATH, "/studio/forgot-password", "/studio/reset-password"];
 
-function securityHeaders(response: NextResponse, nonce: string): NextResponse {
+function securityHeaders(response: NextResponse): NextResponse {
   const supabaseHost = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
 
-  // Next.js requires 'unsafe-inline' for its inline bootstrap in production;
-  // 'strict-dynamic' with a nonce lets our own scripts run while blocking
-  // arbitrary injected ones.
+  // Host-based allowlisting, NOT 'strict-dynamic'.
   //
-  // 'unsafe-eval' is DEV ONLY: webpack's HMR runtime evaluates strings, and
-  // without it React never hydrates — which silently leaves Framer Motion's
-  // reveal animations stuck at opacity:0, i.e. an invisible product grid.
-  // Production ships without it.
+  // 'strict-dynamic' disables 'self'/host allowlisting and only trusts scripts
+  // loaded by a nonce'd parent. Next.js does not put a nonce on its static
+  // chunk <script> tags, so under 'strict-dynamic' the browser blocked every
+  // framework chunk — no JS, no hydration, and Framer Motion's
+  // whileInView reveals stayed stuck at opacity:0 (blank product sections).
+  //
+  // 'self' allows Next's own chunks; 'unsafe-inline' covers its inline
+  // bootstrap. 'unsafe-eval' is DEV ONLY (webpack HMR evaluates strings).
   const isDev = process.env.NODE_ENV === "development";
   const scriptSrc = [
     `'self'`,
-    `'nonce-${nonce}'`,
-    `'strict-dynamic'`,
-    `https:`,
     `'unsafe-inline'`,
     ...(isDev ? ["'unsafe-eval'"] : []),
   ].join(" ");
@@ -75,10 +74,7 @@ function securityHeaders(response: NextResponse, nonce: string): NextResponse {
 }
 
 export async function middleware(request: NextRequest) {
-  const nonce = crypto.randomUUID().replace(/-/g, "");
-
   const requestHeaders = new Headers(request.headers);
-  requestHeaders.set("x-nonce", nonce);
 
   let response = NextResponse.next({ request: { headers: requestHeaders } });
 
@@ -123,7 +119,7 @@ export async function middleware(request: NextRequest) {
     const url = request.nextUrl.clone();
     url.pathname = LOGIN_PATH;
     url.search = "";
-    return securityHeaders(NextResponse.redirect(url), nonce);
+    return securityHeaders(NextResponse.redirect(url));
   }
 
   // An invited user is authenticated *before* they have a password, so a
@@ -138,9 +134,9 @@ export async function middleware(request: NextRequest) {
       const url = request.nextUrl.clone();
       url.pathname = SETUP_PATH;
       url.search = "";
-      return securityHeaders(NextResponse.redirect(url), nonce);
+      return securityHeaders(NextResponse.redirect(url));
     }
-    return securityHeaders(response, nonce);
+    return securityHeaders(response);
   }
 
   // Already signed in and hitting the login page -> straight to the dashboard.
@@ -149,10 +145,10 @@ export async function middleware(request: NextRequest) {
     const url = request.nextUrl.clone();
     url.pathname = DASHBOARD_PREFIX;
     url.search = "";
-    return securityHeaders(NextResponse.redirect(url), nonce);
+    return securityHeaders(NextResponse.redirect(url));
   }
 
-  return securityHeaders(response, nonce);
+  return securityHeaders(response);
 }
 
 export const config = {

@@ -31,7 +31,7 @@ export function Trust() {
                 key={item.t}
                 initial={{ opacity: 0, y: 18 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-40px" }}
+                viewport={{ once: true, amount: "some" }}
                 transition={{ duration: 0.9, ease: EASE, delay: (i % 3) * 0.09 }}
                 className="group"
               >

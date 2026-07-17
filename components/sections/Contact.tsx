@@ -65,7 +65,7 @@ export function Contact() {
                 key={m.label}
                 initial={{ opacity: 0, y: 22 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-40px" }}
+                viewport={{ once: true, amount: "some" }}
                 transition={{ duration: 0.7, ease: EASE, delay: (i % 3) * 0.08 }}
               >
                 {m.href ? (

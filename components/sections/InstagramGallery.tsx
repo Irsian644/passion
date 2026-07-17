@@ -67,7 +67,7 @@ export function InstagramGallery() {
             rel="noopener noreferrer"
             initial={{ opacity: 0, y: 14 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+            viewport={{ once: true, amount: "some" }}
             transition={{ duration: 0.7, ease: EASE, delay: i * 0.05 }}
             className="group flex shrink-0 flex-col items-center gap-2.5"
           >
@@ -93,7 +93,7 @@ export function InstagramGallery() {
             rel="noopener noreferrer"
             initial={{ opacity: 0, scale: 0.985 }}
             whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true, margin: "-40px" }}
+            viewport={{ once: true, amount: "some" }}
             transition={{ duration: 0.9, ease: EASE, delay: (i % 4) * 0.07 }}
             className={`group relative overflow-hidden rounded-[3px] bg-ivory ${shot.span}`}
           >
