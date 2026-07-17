@@ -112,6 +112,13 @@ export const collections: Collection[] = [
   },
 ];
 
+/**
+ * The original hardcoded catalogue.
+ *
+ * NOT read by the site any more — every page reads Supabase via lib/queries.ts.
+ * Retained solely as the source for scripts/seed.ts, which migrates these into
+ * the database. Do not add products here; use the dashboard.
+ */
 export const products: Product[] = [
   {
     slug: "clover-mother-of-pearl-necklace",
@@ -308,37 +315,19 @@ export function localize(value: Localized, lang: Lang): string {
 }
 
 /** The four hero collections shown on the homepage & mega-menu imagery. */
-export const featuredCollectionSlugs: CollectionSlug[] = ["jewelry", "skincare", "beauty", "accessories"];
+const FEATURED: CollectionSlug[] = ["jewelry", "skincare", "beauty", "accessories"];
 
 export function featuredCollections(): Collection[] {
-  return featuredCollectionSlugs
-    .map((s) => collections.find((c) => c.slug === s))
-    .filter((c): c is Collection => Boolean(c));
+  return FEATURED.map((s) => collections.find((c) => c.slug === s)).filter(
+    (c): c is Collection => Boolean(c),
+  );
 }
 
-export function getProduct(slug: string): Product | undefined {
-  return products.find((p) => p.slug === slug);
-}
 
 export function getCollection(slug: string): Collection | undefined {
   return collections.find((c) => c.slug === slug);
 }
 
-export function productsInCollection(slug: CollectionSlug): Product[] {
-  return products.filter((p) => p.collections.includes(slug));
-}
 
-export function bestSellers(): Product[] {
-  return products.filter((p) => p.bestSeller);
-}
 
-export function newArrivals(): Product[] {
-  const flagged = products.filter((p) => p.newArrival);
-  return flagged.length > 0 ? flagged : products.slice(0, 4);
-}
 
-export function relatedProducts(product: Product, limit = 4): Product[] {
-  return products
-    .filter((p) => p.slug !== product.slug && p.collections.some((c) => product.collections.includes(c)))
-    .slice(0, limit);
-}

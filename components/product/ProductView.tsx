@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, Gift, Truck, ShieldCheck, Instagram } from "lucide-react";
+import { ChevronDown, Gift, Truck, ShieldCheck } from "lucide-react";
 import type { Product } from "@/lib/products";
 import { getCollection } from "@/lib/products";
 import { useLang } from "@/components/providers/LanguageProvider";

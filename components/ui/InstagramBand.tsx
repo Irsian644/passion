@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import { useLang } from "@/components/providers/LanguageProvider";
 import { InstagramCTA } from "@/components/ui/InstagramCTA";
 import { Reveal } from "@/components/ui/Reveal";
 import { SITE } from "@/lib/site";
@@ -23,7 +22,6 @@ export function InstagramBand({
   image?: string;
   className?: string;
 }) {
-  const { t } = useLang();
 
   return (
     <Reveal>

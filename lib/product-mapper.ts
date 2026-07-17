@@ -1,22 +1,21 @@
-import type { MaybeLocalized } from "@/lib/localize";
-import type { CollectionSlug, Product } from "@/lib/products";
+import type { CollectionSlug, Localized, Product } from "@/lib/products";
 import type { ProductRow } from "@/lib/supabase/types";
 
 /**
  * A product as the public site consumes it.
  *
  * Shaped like the old hardcoded `Product` so existing components keep working,
- * but every localized field is `MaybeLocalized` — either language may be empty,
+ * but every localized field is `Localized` — either language may be empty,
  * because the admin types both by hand and may fill only one.
  */
 export interface DbProduct {
   id: string;
   slug: string;
-  name: MaybeLocalized;
-  tagline: MaybeLocalized;
-  description: MaybeLocalized;
-  care: MaybeLocalized;
-  materials: MaybeLocalized;
+  name: Localized;
+  tagline: Localized;
+  description: Localized;
+  care: Localized;
+  materials: Localized;
   /** Public URLs, ready to render. */
   images: string[];
   /** Raw storage paths — what the editor saves back to the DB. */

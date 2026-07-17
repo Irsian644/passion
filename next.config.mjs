@@ -1,5 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // An unrelated package-lock.json in the user's home directory makes Next
+  // infer the wrong workspace root, which breaks build file tracing. Pin it.
+  outputFileTracingRoot: import.meta.dirname,
   reactStrictMode: true,
   images: {
     formats: ["image/avif", "image/webp"],
