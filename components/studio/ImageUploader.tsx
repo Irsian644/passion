@@ -3,6 +3,7 @@
 import { ImagePlus, Loader2, Star, X } from "lucide-react";
 import { useRef, useState } from "react";
 
+import { createSignedUpload, removeImage } from "@/app/studio/upload-actions";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { imageUrl } from "@/lib/product-mapper";
 
@@ -12,14 +13,18 @@ const MIN_DIMENSION = 400;
 const ACCEPTED = ["image/jpeg", "image/png", "image/webp", "image/avif"];
 
 /**
- * Uploads straight from the browser to Supabase Storage.
+ * Two-step upload: the server signs, the browser sends.
  *
- * Deliberately not routed through a server action: Vercel caps a serverless
- * request body at ~4.5 MB, so proxying an 8 MB photo would fail. The upload is
- * authorised by the user's session via Storage RLS.
+ * The auth cookie is httpOnly, so this client cannot read the session and any
+ * upload it attempted on its own authority would arrive anonymous and be
+ * rejected by Storage RLS. So a server action authorises each file and returns
+ * a one-shot signed URL, which this component then uploads to directly.
  *
- * Client-side checks here are for fast feedback only — the real limits are
- * enforced by the bucket policy and by Zod on save.
+ * The bytes still go browser -> Supabase, never through a Vercel function, so
+ * the ~4.5MB serverless request-body cap does not apply.
+ *
+ * Client-side checks here are for fast feedback only — createSignedUpload
+ * re-validates type and size on the server.
  */
 
 /** Reads real pixel dimensions; a lying Content-Type can't fake this. */
@@ -37,12 +42,6 @@ function readDimensions(file: File): Promise<{ width: number; height: number }> 
     };
     img.src = url;
   });
-}
-
-function extensionFor(type: string): string {
-  return { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp", "image/avif": "avif" }[
-    type
-  ] ?? "jpg";
 }
 
 export function ImageUploader({
@@ -92,18 +91,24 @@ export function ImageUploader({
           continue;
         }
 
-        // Never trust the client filename — generate our own.
-        const path = `${crypto.randomUUID()}.${extensionFor(file.type)}`;
+        // Ask the server to authorise this file and name it.
+        const signed = await createSignedUpload(file.type, file.size);
+        if (!signed.ok || !signed.path || !signed.token) {
+          setError(signed.message ?? "Ngarkimi dështoi. Provo përsëri.");
+          continue;
+        }
 
         const { error: uploadError } = await supabase.storage
           .from("product-images")
-          .upload(path, file, { contentType: file.type, upsert: false });
+          .uploadToSignedUrl(signed.path, signed.token, file, {
+            contentType: file.type,
+          });
 
         if (uploadError) {
           setError("Ngarkimi dështoi. Provo përsëri.");
           continue;
         }
-        added.push(path);
+        added.push(signed.path);
       }
 
       if (added.length) onChange([...images, ...added]);
@@ -116,8 +121,9 @@ export function ImageUploader({
   async function remove(path: string) {
     onChange(images.filter((p) => p !== path));
     // Best-effort storage cleanup; the row no longer references it either way.
+    // Goes through a server action for the same reason uploads do.
     try {
-      await createSupabaseBrowserClient().storage.from("product-images").remove([path]);
+      await removeImage(path);
     } catch {
       /* ignore */
     }
