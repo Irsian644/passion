@@ -2,7 +2,7 @@
 
 import { useActionState } from "react";
 
-import { requestPasswordReset, type ActionResult } from "@/app/studio/actions";
+import { requestPasswordReset, type ActionResult } from "@/lib/studio-actions";
 import { Banner, Field, Input, SubmitButton } from "@/components/studio/ui";
 
 export function ForgotPasswordForm() {

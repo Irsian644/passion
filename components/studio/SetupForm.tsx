@@ -3,7 +3,7 @@
 import { Check, Eye, EyeOff, X } from "lucide-react";
 import { useActionState, useState } from "react";
 
-import { completeSetup, type SetupResult } from "@/app/setup-account/actions";
+import { completeSetup, type SetupResult } from "@/lib/setup-actions";
 import { Banner, Field, Input, SubmitButton } from "@/components/studio/ui";
 
 /**

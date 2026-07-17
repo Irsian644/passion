@@ -1,10 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Cormorant_Garamond, Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
-import { LanguageProvider } from "@/components/providers/LanguageProvider";
 import { AuthFragmentHandler } from "@/components/studio/AuthFragmentHandler";
-import { Navbar } from "@/components/layout/Navbar";
-import { Footer } from "@/components/layout/Footer";
 import { SITE } from "@/lib/site";
 
 const cormorant = Cormorant_Garamond({
@@ -81,17 +78,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Redeems a Supabase auth fragment (#access_token=…) if the email
             template dropped the client here instead of /auth/confirm. */}
         <AuthFragmentHandler />
-        <LanguageProvider>
-          <a
-            href="#main"
-            className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[200] focus:rounded-full focus:bg-ink focus:px-5 focus:py-2 focus:text-sm focus:text-cream"
-          >
-            Skip to content
-          </a>
-          <Navbar />
-          <main id="main">{children}</main>
-          <Footer />
-        </LanguageProvider>
+        {/* The public chrome (navbar/footer) lives in app/(site)/layout.tsx;
+            the dashboard has its own shell. This layout owns only <html>. */}
+        {children}
       </body>
     </html>
   );

@@ -4,7 +4,7 @@ import { ImageOff, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
-import { deleteProduct } from "@/app/studio/actions";
+import { deleteProduct } from "@/lib/studio-actions";
 import { Button } from "@/components/studio/ui";
 import type { DbProduct } from "@/lib/product-mapper";
 

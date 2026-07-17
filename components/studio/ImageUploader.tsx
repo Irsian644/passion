@@ -3,7 +3,7 @@
 import { ImagePlus, Loader2, Star, X } from "lucide-react";
 import { useRef, useState } from "react";
 
-import { createSignedUpload, removeImage } from "@/app/studio/upload-actions";
+import { createSignedUpload, removeImage } from "@/lib/upload-actions";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { imageUrl } from "@/lib/product-mapper";
 

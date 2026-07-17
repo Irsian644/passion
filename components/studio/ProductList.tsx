@@ -1,16 +1,16 @@
 "use client";
 
-import { GripVertical, ImageOff, Pencil } from "lucide-react";
+import { GripVertical, ImageOff, Pencil, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useOptimistic, useRef, useState, useTransition } from "react";
 
-import { reorderProducts, setPublished } from "@/app/studio/actions";
+import { reorderProducts, setPublished } from "@/lib/studio-actions";
 import { DeleteDialog } from "@/components/studio/DeleteDialog";
 import { Banner } from "@/components/studio/ui";
 import type { DbProduct } from "@/lib/product-mapper";
 
-/** Shows the Albanian name, falling back to English (see lib/localize.ts). */
+/** Shows the Albanian name, falling back to English. */
 function displayName(p: DbProduct): string {
   return p.name.sq.trim() || p.name.en.trim() || "Pa emër";
 }
@@ -151,12 +151,15 @@ export function ProductList({ products }: { products: DbProduct[] }) {
             </div>
 
             <div className="flex shrink-0 items-center gap-1">
+              {/* "Hiq nga faqja" / "Shfaq në faqe" rather than "Fshih": the
+                  latter sits one letter from "Fshi" (delete) and invites a
+                  misclick on an irreversible action. */}
               <button
                 type="button"
                 onClick={() => togglePublished(product)}
                 className="rounded-lg px-2.5 py-1.5 text-[12px] font-medium text-[#78716c] transition-colors hover:bg-[#f5f5f4] hover:text-[#1c1917]"
               >
-                {product.published ? "Fshih" : "Publiko"}
+                {product.published ? "Hiq nga faqja" : "Shfaq në faqe"}
               </button>
 
               <Link
@@ -167,13 +170,16 @@ export function ProductList({ products }: { products: DbProduct[] }) {
                 <Pencil size={15} aria-hidden />
               </Link>
 
+              {/* Separated and icon-only so deleting cannot be confused with
+                  the neighbouring reversible action. */}
               <button
                 type="button"
                 onClick={() => setToDelete(product)}
                 aria-label={`Fshi ${displayName(product)}`}
-                className="rounded-lg px-2.5 py-1.5 text-[12px] font-medium text-[#78716c] transition-colors hover:bg-[#fef2f2] hover:text-[#b91c1c]"
+                title="Fshi produktin"
+                className="ml-1 rounded-lg border-l border-[#f5f5f4] p-2 pl-3 text-[#a8a29e] transition-colors hover:bg-[#fef2f2] hover:text-[#b91c1c]"
               >
-                Fshi
+                <Trash2 size={15} aria-hidden />
               </button>
             </div>
           </li>

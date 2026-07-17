@@ -7,7 +7,7 @@ import {
   createProduct,
   updateProduct,
   type ActionResult,
-} from "@/app/studio/actions";
+} from "@/lib/studio-actions";
 import { ImageUploader } from "@/components/studio/ImageUploader";
 import {
   Banner,
@@ -273,7 +273,9 @@ export function ProductForm({ product }: { product?: DbProduct }) {
       </section>
 
       {/* --- Actions ----------------------------------------------------- */}
-      <div className="sticky bottom-0 -mx-5 flex items-center gap-2 border-t border-[#e7e5e4] bg-[#faf9f7]/95 px-5 py-4 backdrop-blur sm:mx-0 sm:rounded-xl sm:border sm:px-5">
+      {/* Opaque, not translucent: the fields scrolling underneath were showing
+          through and colliding with the buttons. */}
+      <div className="sticky bottom-0 z-10 -mx-5 flex items-center gap-2 border-t border-[#e7e5e4] bg-[#faf9f7] px-5 py-4 shadow-[0_-8px_16px_-8px_rgba(28,25,23,0.12)] sm:mx-0 sm:rounded-xl sm:border">
         <SubmitButton pendingLabel="Duke ruajtur…">
           {isEdit ? "Ruaj Ndryshimet" : "Shto Produktin"}
         </SubmitButton>

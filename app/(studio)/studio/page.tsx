@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Plus } from "lucide-react";
 
-import { signOut } from "@/app/studio/actions";
+import { signOut } from "@/lib/studio-actions";
 import { ProductList } from "@/components/studio/ProductList";
 import { requireAdmin } from "@/lib/auth";
 import { toDbProduct } from "@/lib/product-mapper";
