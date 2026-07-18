@@ -1,8 +1,15 @@
 import Link from "next/link";
 
 import { ForgotPasswordForm } from "@/components/studio/ForgotPasswordForm";
+import { Banner } from "@/components/studio/ui";
 
-export default function ForgotPasswordPage() {
+export default async function ForgotPasswordPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>;
+}) {
+  const { error } = await searchParams;
+
   return (
     <main className="flex min-h-screen items-center justify-center px-6 py-16">
       <div className="w-full max-w-[380px]">
@@ -14,6 +21,17 @@ export default function ForgotPasswordPage() {
             Shkruaj email-in tënd dhe do të marrësh një lidhje për ta ndryshuar.
           </p>
         </div>
+
+        {/* A recovery link that failed to exchange (expired or already used)
+            lands back here rather than on the invitation page. */}
+        {error === "link" ? (
+          <div className="mb-4">
+            <Banner tone="error">
+              Kjo lidhje ka skaduar ose është përdorur tashmë. Kërko një të re
+              më poshtë.
+            </Banner>
+          </div>
+        ) : null}
 
         <ForgotPasswordForm />
 

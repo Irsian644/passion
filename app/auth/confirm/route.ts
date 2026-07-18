@@ -41,9 +41,15 @@ export async function GET(request: NextRequest) {
     exchangeFailed = true;
   }
 
-  // Expired or already-used link. Send them somewhere that explains it in
-  // plain language — never surface the raw Supabase error.
+  // Expired or already-used link. Explain it in plain language — never surface
+  // the raw Supabase error. Route by link type: a failed password reset must
+  // not claim the *invitation* expired.
   if (exchangeFailed) {
+    if (type === "recovery") {
+      const url = new URL("/studio/forgot-password", origin);
+      url.searchParams.set("error", "link");
+      return NextResponse.redirect(url);
+    }
     const url = new URL(SETUP_PATH, origin);
     url.searchParams.set("error", "link");
     return NextResponse.redirect(url);
