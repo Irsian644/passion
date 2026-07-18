@@ -63,6 +63,16 @@ export function AuthFragmentHandler() {
         access_token: snapshot.accessToken,
         refresh_token: snapshot.refreshToken,
       })
+      .then(async () => {
+        // Wait until the session is actually readable before navigating.
+        // Navigating too early lands on the destination with no session yet,
+        // which made a valid recovery link look expired.
+        for (let i = 0; i < 10; i++) {
+          const { data } = await supabase.auth.getSession();
+          if (data.session) break;
+          await new Promise((r) => setTimeout(r, 100));
+        }
+      })
       .finally(() => {
         // Strip the tokens from the URL — they must not linger in history, be
         // copy-pasted, or leak via a Referer header.

@@ -22,16 +22,37 @@ export function ResetPasswordForm() {
 
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
+    let settled = false;
 
-    // Fires once the SDK has consumed the recovery fragment.
+    const markReady = () => {
+      settled = true;
+      setReady("ok");
+    };
+
+    // Fires once the SDK has consumed the recovery fragment (or restored a
+    // session from cookies).
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN") setReady("ok");
+      if (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN") markReady();
     });
 
-    // Covers the case where the session is already established.
-    supabase.auth.getSession().then(({ data }) => {
-      setReady((prev) => (data.session ? "ok" : prev === "ok" ? "ok" : "invalid"));
-    });
+    // The session may arrive via the fragment, or already exist in cookies
+    // after AuthFragmentHandler navigated here. Poll briefly rather than
+    // declaring the link invalid on the first miss — getSession() can resolve
+    // before the SDK has finished restoring the session, which previously
+    // showed "this link is invalid" on a perfectly good link.
+    let attempts = 0;
+    const poll = async () => {
+      if (settled) return;
+      const { data } = await supabase.auth.getSession();
+      if (data.session) return markReady();
+      if (++attempts >= 12) {
+        // ~6s with no session: the link really is spent or invalid.
+        if (!settled) setReady("invalid");
+        return;
+      }
+      setTimeout(poll, 500);
+    };
+    poll();
 
     return () => sub.subscription.unsubscribe();
   }, []);
