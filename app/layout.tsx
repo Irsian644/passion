@@ -71,9 +71,28 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
+/** Origin of the Supabase project, for preconnect. Empty when unset. */
+const supabaseOrigin = (() => {
+  try {
+    return new URL(process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").origin;
+  } catch {
+    return "";
+  }
+})();
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="sq" className={`${cormorant.variable} ${playfair.variable} ${inter.variable}`}>
+      <head>
+        {/* Product images stream from Supabase Storage. Warming DNS + TLS here
+            removes a full round-trip from the first image request. */}
+        {supabaseOrigin ? (
+          <>
+            <link rel="preconnect" href={supabaseOrigin} crossOrigin="" />
+            <link rel="dns-prefetch" href={supabaseOrigin} />
+          </>
+        ) : null}
+      </head>
       <body className="font-sans antialiased">
         {/* Redeems a Supabase auth fragment (#access_token=…) if the email
             template dropped the client here instead of /auth/confirm. */}

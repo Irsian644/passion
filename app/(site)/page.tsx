@@ -6,7 +6,12 @@ import { Trust } from "@/components/sections/Trust";
 import { Marquee } from "@/components/sections/Marquee";
 import { InstagramGallery } from "@/components/sections/InstagramGallery";
 import { Newsletter } from "@/components/sections/Newsletter";
-import { JsonLd, organizationSchema, websiteSchema } from "@/lib/schema";
+import {
+  JsonLd,
+  localBusinessSchema,
+  organizationSchema,
+  websiteSchema,
+} from "@/lib/schema";
 import { getBestSellers } from "@/lib/queries";
 import { toLegacyProduct } from "@/lib/product-mapper";
 
@@ -17,7 +22,9 @@ export default async function HomePage() {
 
   return (
     <>
-      <JsonLd data={[organizationSchema(), websiteSchema()]} />
+      <JsonLd
+        data={[organizationSchema(), websiteSchema(), localBusinessSchema()]}
+      />
       <Hero />
       <Collections />
       <BestSellers items={bestSellers} />

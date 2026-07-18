@@ -2,11 +2,12 @@ import type { Metadata } from "next";
 import { ProductListing } from "@/components/collection/ProductListing";
 import { getBestSellers } from "@/lib/queries";
 import { toLegacyProduct } from "@/lib/product-mapper";
-import { JsonLd, breadcrumbSchema } from "@/lib/schema";
+import { JsonLd, breadcrumbSchema, itemListSchema } from "@/lib/schema";
 
 export const metadata: Metadata = {
-  title: "Best Sellers",
-  description: "The most-loved pieces at Passion Dream — discover them here, then order on Instagram.",
+  title: "Më të Shiturat — bizhuteri të preferuara",
+  description:
+    "Bizhuteritë më të shitura të Passion Dream — gjerdanë, vathë dhe byzylykë me perla, të punuar me dorë në Shqipëri. Porosit në Instagram.",
   alternates: { canonical: "/best-sellers" },
 };
 
@@ -19,10 +20,19 @@ export default async function BestSellersPage() {
   return (
     <>
       <JsonLd
-        data={breadcrumbSchema([
-          { name: "Home", url: "/" },
-          { name: "Best Sellers", url: "/best-sellers" },
-        ])}
+        data={[
+          breadcrumbSchema([
+            { name: "Kryefaqja", url: "/" },
+            { name: "Më të Shiturat", url: "/best-sellers" },
+          ]),
+          itemListSchema(
+            products.map((p) => ({
+              name: p.name.sq || p.name.en,
+              url: `/products/${p.slug}`,
+            })),
+            "Më të Shiturat",
+          ),
+        ]}
       />
       <ProductListing
         title={{ sq: "Më të Shiturat", en: "Best Sellers" }}

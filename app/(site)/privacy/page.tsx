@@ -1,7 +1,12 @@
 import type { Metadata } from "next";
 import { ContentPage } from "@/components/ui/ContentPage";
 
-export const metadata: Metadata = { title: "Privacy", alternates: { canonical: "/privacy" } };
+export const metadata: Metadata = {
+  title: "Politika e privatësisë",
+  description:
+    "Si i trajton Passion Dream të dhënat e tua — çfarë mbledhim, pse, dhe si mund të na kontaktosh për to.",
+  alternates: { canonical: "/privacy" },
+};
 
 export default function PrivacyPage() {
   return (

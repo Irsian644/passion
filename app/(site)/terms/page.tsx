@@ -1,7 +1,12 @@
 import type { Metadata } from "next";
 import { ContentPage } from "@/components/ui/ContentPage";
 
-export const metadata: Metadata = { title: "Terms", alternates: { canonical: "/terms" } };
+export const metadata: Metadata = {
+  title: "Kushtet e përdorimit",
+  description:
+    "Kushtet e përdorimit të faqes Passion Dream — informacion mbi produktet, porositë përmes Instagram dhe përgjegjësitë.",
+  alternates: { canonical: "/terms" },
+};
 
 export default function TermsPage() {
   return (

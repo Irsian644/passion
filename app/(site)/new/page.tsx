@@ -2,11 +2,12 @@ import type { Metadata } from "next";
 import { ProductListing } from "@/components/collection/ProductListing";
 import { getNewArrivals } from "@/lib/queries";
 import { toLegacyProduct } from "@/lib/product-mapper";
-import { JsonLd, breadcrumbSchema } from "@/lib/schema";
+import { JsonLd, breadcrumbSchema, itemListSchema } from "@/lib/schema";
 
 export const metadata: Metadata = {
-  title: "New Arrivals",
-  description: "The newest pieces at Passion Dream — discover them here, then order on Instagram.",
+  title: "Të Reja — bizhuteri të sapoardhura",
+  description:
+    "Pjesët më të reja të Passion Dream — bizhuteri me perla dhe sedef, të punuara me dorë në Shqipëri. Zbuloji dhe porosit në Instagram.",
   alternates: { canonical: "/new" },
 };
 
@@ -19,10 +20,19 @@ export default async function NewArrivalsPage() {
   return (
     <>
       <JsonLd
-        data={breadcrumbSchema([
-          { name: "Home", url: "/" },
-          { name: "New Arrivals", url: "/new" },
-        ])}
+        data={[
+          breadcrumbSchema([
+            { name: "Kryefaqja", url: "/" },
+            { name: "Të Reja", url: "/new" },
+          ]),
+          itemListSchema(
+            products.map((p) => ({
+              name: p.name.sq || p.name.en,
+              url: `/products/${p.slug}`,
+            })),
+            "Të Reja",
+          ),
+        ]}
       />
       <ProductListing
         title={{ sq: "Të Reja", en: "New Arrivals" }}
